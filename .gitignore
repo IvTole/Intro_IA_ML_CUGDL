@@ -1,3 +1,6 @@
+# MacOS
+**/.DS_Store
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
@@ -212,6 +215,7 @@ tempCodeRunnerFile.py
 # Marimo
 marimo/_static/
 marimo/_lsp/
+marimo/.artifacts/
 __marimo__/
 
 # Streamlit
