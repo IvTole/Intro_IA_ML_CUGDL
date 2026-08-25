@@ -5,6 +5,8 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
+    "contextily>=1.6.2",
+    "geopandas>=1.0.1",
     "marimo>=0.17.6",
     "matplotlib>=3.9.4",
     "mlflow>=3.0,<4",
@@ -13,7 +15,5 @@ dependencies = [
     "polars>=1.36.1",
     "scikit-learn>=1.6.1",
     "seaborn>=0.13.2",
-    "torch>=2.8.0",
-    "torchvision>=0.23.0",
     "xgboost>=2.1.4",
 ]
