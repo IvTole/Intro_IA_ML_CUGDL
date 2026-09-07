@@ -11,11 +11,42 @@ def _():
     import pandas as pd # dataframes 
     import numpy as np # tensores, estadisticas, algebra lineal
     import matplotlib.pyplot as plt # graficos
+    import seaborn as sns
 
     import geopandas as gpd
     import contextily as ctx
 
-    return ctx, gpd, mo, pd, plt
+    from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder, MinMaxScaler, StandardScaler
+    from sklearn.compose import ColumnTransformer
+    from sklearn.model_selection import train_test_split
+
+    # Modelos (regresion)
+    from sklearn.linear_model import LinearRegression
+    from sklearn.tree import DecisionTreeRegressor
+    from sklearn.ensemble import RandomForestRegressor
+    from sklearn.svm import SVR
+
+    # Metricas (regresion)
+    from sklearn.metrics import mean_absolute_error, mean_squared_error, root_mean_squared_error, r2_score, mean_absolute_percentage_error
+
+    return (
+        ColumnTransformer,
+        OneHotEncoder,
+        RandomForestRegressor,
+        StandardScaler,
+        ctx,
+        gpd,
+        mean_absolute_error,
+        mean_absolute_percentage_error,
+        mean_squared_error,
+        mo,
+        pd,
+        plt,
+        r2_score,
+        root_mean_squared_error,
+        sns,
+        train_test_split,
+    )
 
 
 @app.cell(hide_code=True)
@@ -30,6 +61,18 @@ def _(mo):
 def _(pd):
     url = "https://raw.githubusercontent.com/IvTole/Intro_IA_ML_CUGDL/refs/heads/main/data/housing/housing.csv"
     df_housing = pd.read_csv(url)
+
+    # Promediar en terminos de población y numero de casas
+
+    df_housing["total_bedrooms"] = df_housing["total_bedrooms"] / df_housing["households"]
+    df_housing["total_rooms"] = df_housing["total_rooms"] / df_housing["households"]
+
+    # df_housing = df_housing.drop(columns=["households"])
+
+    # valores nulos
+    df_housing = df_housing.dropna()
+
+
     df_housing.head()
     return (df_housing,)
 
@@ -134,6 +177,117 @@ def _(df_housing, feature_selector, plt):
     ax_scatter.set_title("Diagrama de correlacion con el target")
 
     ax_scatter.scatter(df_housing[selected_feature], df_housing["median_house_value"])
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## Preprocesamiento
+    """)
+    return
+
+
+@app.cell
+def _():
+    cols_numeric = ['housing_median_age', 'total_rooms',
+                'total_bedrooms', 'population', 'households',
+                'median_income']
+    cols_categoric = ['ocean_proximity']
+    return cols_categoric, cols_numeric
+
+
+@app.cell
+def _(
+    ColumnTransformer,
+    OneHotEncoder,
+    StandardScaler,
+    cols_categoric,
+    cols_numeric,
+    df_housing,
+):
+    # Pipeline de preprocesamiento
+    encoder = OneHotEncoder(drop=None, sparse_output=False) 
+    scaler =  StandardScaler()
+
+    # Objeto ColumnTransformer
+    preprocessor = ColumnTransformer(
+        transformers=[
+            ('num', scaler, cols_numeric),
+            ('cat', encoder, cols_categoric)
+        ],
+        remainder="passthrough"
+    )
+
+    # salida a pandas
+    preprocessor.set_output(transform="pandas")
+
+    # Ajustarlo con los datos
+    preprocessor_fitted = preprocessor.fit(df_housing)
+
+    # Transformar el dataset
+    df_housing_trans = preprocessor_fitted.transform(df_housing)
+
+    df_housing_trans
+    return (df_housing_trans,)
+
+
+@app.cell
+def _(df_housing_trans, plt, sns):
+    # Matriz de correlacion
+    plt.figure(figsize=(20,20))
+    sns.heatmap(df_housing_trans.corr(method="spearman"),cmap="YlGnBu", annot = True)
+
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## Entrenamiento y evaluacion de un modelo de ML (scikit-learn)
+    """)
+    return
+
+
+@app.cell
+def _(
+    RandomForestRegressor,
+    df_housing_trans,
+    mean_absolute_error,
+    mean_absolute_percentage_error,
+    mean_squared_error,
+    r2_score,
+    root_mean_squared_error,
+    train_test_split,
+):
+    # Paso 1 - Features, target
+    X = df_housing_trans.drop(columns="remainder__median_house_value")
+    y = df_housing_trans["remainder__median_house_value"]
+
+    # Paso 2 - Division de entrenamiento / validacion
+    X_train, X_valid, y_train, y_valid = train_test_split(X, y, train_size = 0.80)
+
+    # Paso 3 - Instanciar modelo
+    model = RandomForestRegressor()
+
+    # Paso 4 - Entrenamiento (Training)
+    model.fit(X=X_train, y=y_train)
+
+    # Paso 5 - Predicciones
+    y_pred = model.predict(X=X_valid)
+
+    # Paso 6 -- Métricas de evaluacion
+    mae = mean_absolute_error(y_pred=y_pred, y_true=y_valid)
+    mse = mean_squared_error(y_pred=y_pred, y_true=y_valid)
+    rmse = root_mean_squared_error(y_pred=y_pred, y_true=y_valid)
+    r2 = r2_score(y_pred=y_pred, y_true=y_valid)
+    mape = mean_absolute_percentage_error(y_pred=y_pred, y_true=y_valid)
+
+    print(f"MAE: {mae}")
+    print(f"MSE: {mse}")
+    print(f"RMSE: {rmse}")
+    print(f"R2: {r2}")
+    print(f"MAPE: {mape}")
     return
 
 
