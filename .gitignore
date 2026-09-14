@@ -1,6 +1,10 @@
 # MacOS
 **/.DS_Store
 
+# Data
+02_ml_modules/data/test.csv
+02_ml_modules/data/train.csv
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
