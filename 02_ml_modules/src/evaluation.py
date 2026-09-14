@@ -9,6 +9,14 @@ from sklearn.metrics import r2_score, mean_squared_error, root_mean_squared_erro
 from src.config import SEED
 
 class ModelEvaluation:
+    """
+    Argumentos:
+        X - Matriz de características (variables, columnas)
+        y - Vector target
+        test_size - Tamaño de datos de validacion
+        shuffle - mezclar datos antes de split
+        seed - semilla aleatoria
+    """
 
     def __init__(self, X: pd.DataFrame, y: pd.Series, test_size: float = 0.2, shuffle: bool = True, seed:int = SEED):
 
@@ -21,6 +29,10 @@ class ModelEvaluation:
         )
 
     def evaluate_model(self, model):
+        """
+        Argumentos:
+            model - Pipeline (sklearn)
+        """
 
         model_type = type(model.named_steps["model"]).__name__
         print(f"Model Type: {model_type}")

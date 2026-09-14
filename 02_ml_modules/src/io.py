@@ -16,11 +16,19 @@ class Dataset:
 
     # Importacion de datos (método)
     def load_data(self):
+        """
+        Método de importación de datos
+        
+        Return: DataFrame
+        """
 
         df = pd.read_csv(filepath_or_buffer=TRAIN_DATA_PATH)
 
         # Valores nulos
         df = df.dropna()
+
+        if self.num_samples:
+            df = df.sample(n=self.num_samples)
 
         return df
     

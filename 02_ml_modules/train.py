@@ -17,21 +17,20 @@ from sklearn.neural_network import MLPRegressor
 def train():
 
     # Importacion y preprocesamiento datos
-    data = Dataset(seed=43)
-
+    data = Dataset(seed=43, num_samples=None)
     X_train, y_train = data.load_xy()
 
     # Model pipeline (preprocessing + model, Linear Regression)
     pipeline_lr = Pipeline(
         [
             ("preprocessor", build_preprocessor()),
-            ("model", KNeighborsRegressor())
+            ("model", RandomForestRegressor())
         ]
     )
 
     # Entrenamiento y métricas
     ev = ModelEvaluation(X=X_train, y=y_train)
-    ev.evaluate_model(pipeline_lr)
+    ev.evaluate_model(model=pipeline_lr)
 
     return
 
