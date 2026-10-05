@@ -20,6 +20,19 @@ def _():
     from sklearn.compose import ColumnTransformer
     from sklearn.preprocessing import StandardScaler, OneHotEncoder
     from sklearn.impute import KNNImputer, SimpleImputer
+    from sklearn.model_selection import train_test_split
+
+    # Modelos de ML
+    from sklearn.neighbors import KNeighborsClassifier
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.tree import DecisionTreeClassifier
+    from sklearn.naive_bayes import GaussianNB, BernoulliNB
+
+    # Métricas de evaluación
+    from sklearn.metrics import accuracy_score,recall_score, precision_score, f1_score
+    from sklearn.metrics import roc_auc_score, classification_report
+    from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
     import pandas as pd
     import numpy as np
@@ -27,22 +40,32 @@ def _():
 
     return (
         ColumnTransformer,
+        ConfusionMatrixDisplay,
+        DecisionTreeClassifier,
+        GaussianNB,
         HTTPAdapter,
         KNNImputer,
+        KNeighborsClassifier,
+        LogisticRegression,
         OneHotEncoder,
         Path,
         Pipeline,
+        RandomForestClassifier,
         Retry,
         SimpleImputer,
         StandardScaler,
+        classification_report,
+        confusion_matrix,
         datetime,
         json,
         mo,
         np,
         os,
         pd,
+        plt,
         requests,
         timezone,
+        train_test_split,
     )
 
 
@@ -223,9 +246,119 @@ def _(
 
     preprocessor.set_output(transform="pandas")
 
+    preprocessor
+
+    # Ajuste del pipeline (con datos) y posteriormente la aplicación sobre el dataset
     df_clean = preprocessor.fit_transform(raw_filtered)
 
     df_clean.head()
+    return (df_clean,)
+
+
+@app.cell
+def _(df_clean):
+    df_clean.columns
+    return
+
+
+@app.cell
+def _(df_clean, train_test_split):
+    X = df_clean.drop(columns="target__P_24h")
+    y = df_clean["target__P_24h"]
+
+    # Split de datos
+    X_train, X_valid, y_train, y_valid = train_test_split(X,
+                                                          y,
+                                                          test_size=0.2,
+                                                          random_state=42,
+                                                          shuffle=True,
+                                                          stratify=df_clean["target__P_24h"])
+    return X_train, X_valid, y_train, y_valid
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## Modelos de Machine Learning
+    """)
+    return
+
+
+@app.cell
+def _(
+    DecisionTreeClassifier,
+    GaussianNB,
+    KNeighborsClassifier,
+    LogisticRegression,
+    RandomForestClassifier,
+):
+    # Diccionario, llaves - valores
+
+    keys = ["LR",
+            "DT",
+            "RF",
+            "KNN", 
+            "NB"]
+    values = [LogisticRegression(penalty='l2', solver='lbfgs', tol=0.0001, max_iter=10000),
+             DecisionTreeClassifier(max_depth=6, min_samples_split=35, min_samples_leaf=10),
+             RandomForestClassifier(n_estimators=100),
+             KNeighborsClassifier(metric="minkowski", p=2),
+             GaussianNB(var_smoothing=1e-9)]
+
+    # Creamos un diccionario de modelos
+    ml_dict = dict(zip(keys,values))
+    return (ml_dict,)
+
+
+@app.cell
+def _(X_train, ml_dict, y_train):
+    # Entrenamiento de los modelos
+
+    for key_train, model_train in ml_dict.items():
+
+        print(f"Entrenando modelo {key_train}")
+        # Entrenar
+        model_train.fit(X_train, y_train)
+        print(f"Modelo {key_train} entrenado!")
+    
+    return
+
+
+@app.cell
+def _(
+    ConfusionMatrixDisplay,
+    X_valid,
+    classification_report,
+    confusion_matrix,
+    ml_dict,
+    plt,
+    y_valid,
+):
+    # Loop de evaluacion
+
+    for key_valid, model_valid in ml_dict.items():
+
+        print(f"Evaluando modelo {key_valid} ...")
+    
+        y_pred = model_valid.predict(X_valid)
+
+        # matriz de confusion
+        cm = confusion_matrix(y_pred=y_pred, y_true=y_valid)
+        fig = ConfusionMatrixDisplay(cm)
+        fig.plot()
+        plt.show()
+    
+        # metricas
+        report = classification_report(y_pred=y_pred, y_true=y_valid)
+        print(report)
+    return
+
+
+@app.cell
+def _(X_valid, ml_dict):
+    y_pred_t = ml_dict["LR"].predict_proba(X_valid)
+
+    y_pred_t
     return
 
 
